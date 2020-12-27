@@ -190,7 +190,7 @@ namespace fs {
     File File::openNextFile(uint8_t mode) {
         FRESULT res;
         UINT i;
-        static char path[257];
+        char path[257];
 
         strcpy(path, _name);
         if (!_fno) {
