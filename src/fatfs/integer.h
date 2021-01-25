@@ -14,6 +14,8 @@
 
 #else			/* Embedded platform */
 
+    #include    <wchar.h>
+
     /* These types MUST be 16-bit or 32-bit */
     typedef int				INT;
     typedef unsigned int	UINT;
@@ -24,7 +26,7 @@
     /* These types MUST be 16-bit */
     typedef short			SHORT;
     typedef unsigned short	WORD;
-    typedef unsigned short	WCHAR;
+    typedef wchar_t     	WCHAR;
 
     /* These types MUST be 32-bit */
     typedef long			LONG;
@@ -32,6 +34,9 @@
 
     /* This type MUST be 64-bit (Remove this for C89 compatibility) */
     typedef unsigned long long QWORD;
+
+    #include <assert.h>
+    static_assert(sizeof(WCHAR) == 2, "WCHAR size doesn't match. Use -fshort-wchar  option");
 
 #endif
 

@@ -667,7 +667,7 @@ uint8_t sdcard_unmount(uint8_t pdrv) {
     card->status |= STA_NOINIT;
     card->type = CARD_NONE;
 
-    f_mount(NULL, "0:", 0);
+    f_mount(NULL, _T("0:"), 0);
     return 0;
 }
 

@@ -12,22 +12,22 @@
 
 namespace fs {
 
-    File::File(FIL f, const char* n) {
+    File::File(FIL f, const TCHAR* n) {
         //is a file.
         _file = new FIL(f);
         if (_file) {
             _dir = NULL;
-            sprintf((char*)_name, "%s", n);
+            tcscpy( _name, n);
         }
         _fno = NULL;
     }
 
-    File::File(DIR d, const char* n) {
+    File::File(DIR d, const TCHAR* n) {
         // is a directory
         _dir = new DIR(d);
         if (_dir) {
             _file = NULL;
-            sprintf((char*)_name, "%s", n);
+            tcscpy( _name, n);
         }
         _fno = NULL;
     }
@@ -46,7 +46,7 @@ namespace fs {
     }
 
     // returns a pointer to the file name
-    char* File::name(void) {
+    TCHAR* File::name(void) {
         return _name;
     }
 
@@ -190,9 +190,9 @@ namespace fs {
     File File::openNextFile(uint8_t mode) {
         FRESULT res;
         UINT i;
-        char path[257];
+        TCHAR path[257];
 
-        strcpy(path, _name);
+        tcscpy(path, _name);
         if (!_fno) {
             _fno = new FILINFO;
         }
@@ -206,11 +206,11 @@ namespace fs {
                 continue;    /*ignore if the addr was removed*/
             }
 
-            i = strlen(path);
+            i = tcslen(path);
             if (i && path[i - 1] != '/') {
                 path[i++] = '/';
             }
-            sprintf((char*)path + i, "%s", _fno->fname);
+            tcscpy( path + i, _fno->fname );
 
             if (_fno->fattrib & AM_DIR) {
                 /* It is a directory */
@@ -245,11 +245,11 @@ namespace fs {
         return false;
     }
 
-    File FS::open(const char* filepath, uint8_t mode) {
+    File FS::open(const TCHAR* filepath, uint8_t mode) {
         FRESULT ret = FR_OK;
         FILINFO v_fileinfo;
 
-        if (!strcmp(filepath, "/")) {
+        if (!tcscmp(filepath, _T("/"))) {
             DIR dir;
             if ((ret = f_opendir(&dir, _T("/"))) == FR_OK) {
                 return File(dir, filepath);
@@ -284,7 +284,7 @@ namespace fs {
         }
     }
 
-    File FS::open(const char* filepath, const char* mode) {
+    File FS::open(const TCHAR* filepath, const char* mode) {
         if (strlen(mode) > 3) {
             return File();
         }
@@ -316,7 +316,7 @@ namespace fs {
         return File();
     }
 
-    boolean FS::exists(const char* filepath) {
+    boolean FS::exists(const TCHAR* filepath) {
         FRESULT ret = FR_OK;
         FILINFO v_fileinfo;
         if ((ret = f_stat(filepath, &v_fileinfo)) == FR_OK) {
@@ -326,7 +326,7 @@ namespace fs {
         }
     }
 
-    boolean FS::mkdir(const char* filepath) {
+    boolean FS::mkdir(const TCHAR* filepath) {
         FRESULT ret = FR_OK;
         ret = f_mkdir(filepath);
         if (ret == FR_OK) {
@@ -336,7 +336,7 @@ namespace fs {
         }
     }
 
-    boolean FS::rename(const char* pathFrom, const char* pathTo) {
+    boolean FS::rename(const TCHAR* pathFrom, const TCHAR* pathTo) {
         FRESULT ret = FR_OK;
         ret = f_rename(pathFrom, pathTo);
         if (ret == FR_OK) {
@@ -346,14 +346,17 @@ namespace fs {
         }
     }
 
-    boolean FS::rmdir(const char* filepath) {
-        char file[_MAX_LFN + 2];
+    boolean FS::rmdir(const TCHAR* filepath) {
+        TCHAR file[_MAX_LFN + 2];
         FRESULT status;
         DIR dj;
         FILINFO fno;
         status = f_findfirst(&dj, &fno, filepath, _T("*"));
         while (status == FR_OK && fno.fname[0]) {
-            sprintf((char*)file, "%s/%s", filepath, fno.fname);
+            tcscpy( file, filepath );
+            tcscat( file, _T("/") );
+            tcscat( file, fno.fname );
+
             if (fno.fattrib & AM_DIR) {
                 rmdir(file);
             } else {
@@ -369,7 +372,7 @@ namespace fs {
         }
     }
 
-    boolean FS::remove(const char* filepath) {
+    boolean FS::remove(const TCHAR* filepath) {
         FRESULT ret = FR_OK;
         ret = f_unlink(filepath);
         if (ret == FR_OK) {

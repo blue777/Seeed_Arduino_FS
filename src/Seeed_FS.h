@@ -39,6 +39,79 @@
 
 #include "fatfs/ff.h"
 
+/*
+#if _LFN_UNICODE
+#include <wchar.h>
+#define tcscpy      wcscpy
+#define tcscat      wcscat
+#define tcslen      wcslen
+#define tcschr      wcschr
+#define tcsrchr     wcsrchr
+#define tcscmp      wcscmp
+#define tcscasecmp  wcscasecmp
+#else
+#define tcscpy      strcpy
+#define tcscat      strcat
+#define tcslen      strlen
+#define tcschr      strchr
+#define tcsrchr     strrchr
+#define tcscmp      strcmp
+#define tcscasecmp  strcasecmp
+#endif
+*/
+
+
+static inline void tcscpy(TCHAR* dst, const TCHAR* src)
+{
+    while (*src) *dst++ = *src++;
+    *dst = '\0';
+}
+
+static inline void tcscat(TCHAR* dst, const TCHAR* src)
+{
+    while (*dst) dst++;
+    while (*src) *dst++ = *src++;
+    *dst = '\0';
+}
+
+static inline int tcslen(const TCHAR* str)
+{
+    const TCHAR* begin = str;
+    while (*str) str++;
+    return  str - begin;
+}
+
+static inline TCHAR* tcschr(const TCHAR* str, int c)
+{
+    while (*str && (*str != c))   str++;
+    return  *str == c ? (TCHAR*)str : NULL;
+}
+
+static inline TCHAR* tcsrchr(const TCHAR* str, int c)
+{
+    const TCHAR* begin = str;
+    while (*str)   str++;
+    while ( (begin <= str) && (*str != c))   str--;
+    return  begin <= str ? (TCHAR*)str : NULL;
+}
+
+static inline int tcscmp(const TCHAR* str1, const TCHAR* str2)
+{
+    int i   = 0;
+    while ( str1[i] && str2[i] && (str1[i] == str2[i])) i++;
+    return  str1[i] == str2[i] ? 0 : str1[i] < str2[i] ? -1 : 1;
+}
+
+static inline int tcscasecmp(const TCHAR* str1, const TCHAR* str2)
+{
+    int i   = 0;
+    while ( str1[i] && str2[i] && (tolower(str1[i]) == tolower(str2[i])))   i++;
+    return  str1[i] == str2[i] ? 0 : str1[i] < str2[i] ? -1 : 1;
+}
+
+
+
+
 namespace fs {
 
     enum SeekMode {
@@ -50,14 +123,14 @@ namespace fs {
 
     class File : public Stream {
       private:
-        char _name[_MAX_LFN + 2]; // file name
+        TCHAR _name[_MAX_LFN + 2]; // file name
         FIL* _file;  // underlying file pointer
         DIR* _dir;  // if open a dir
         FILINFO* _fno; // for traverse directory
 
       public:
-        File(FIL f, const char* name);     // wraps an underlying SdFile
-        File(DIR d, const char* name);
+        File(FIL f, const TCHAR* name);     // wraps an underlying SdFile
+        File(DIR d, const TCHAR* name);
         File(void);      // 'empty' constructor
         ~File();
         virtual size_t write(uint8_t);
@@ -73,7 +146,7 @@ namespace fs {
         uint32_t size();
         void close();
         operator bool();
-        char* name();
+        TCHAR* name();
 
         boolean isDirectory(void);
         File openNextFile(uint8_t mode = FA_READ);
@@ -88,43 +161,20 @@ namespace fs {
         // Open the specified file/directory with the supplied mode (e.g. read or
         // write, etc). Returns a File object for interacting with the file.
         // Note that currently only one file can be open at a time.
-        File open(const char* filepath, uint8_t mode = FILE_READ);
-        File open(const String& filepath, uint8_t mode = FILE_READ) {
-            return open(filepath.c_str(), mode);
-        }
-        File open(const char* filepath, const char* mode);
-        File open(const String& filepath, const char* mode) {
-            return open(filepath.c_str(), mode);
-        }
+        File open(const TCHAR* filepath, uint8_t mode = FILE_READ);
+        File open(const TCHAR* filepath, const char* mode);
 
         // Methods to determine if the requested file path exists.
-        boolean exists(const char* filepath);
-        boolean exists(const String& filepath) {
-            return exists(filepath.c_str());
-        }
+        boolean exists(const TCHAR* filepath);
 
         // Create the requested directory heirarchy--if intermediate directories
         // do not exist they will be created.
-        boolean mkdir(const char* filepath);
-        boolean mkdir(const String& filepath) {
-            return mkdir(filepath.c_str());
-        }
-
-        boolean rename(const char* pathFrom, const char* pathTo);
-        boolean rename(const String& pathFrom, const String& pathTo) {
-            return rename(pathFrom.c_str(), pathTo.c_str());
-        };
+        boolean mkdir(const TCHAR* filepath);
+        boolean rename(const TCHAR* pathFrom, const TCHAR* pathTo);
 
         // Delete the file.
-        boolean remove(const char* filepath);
-        boolean remove(const String& filepath) {
-            return remove(filepath.c_str());
-        }
-
-        boolean rmdir(const char* filepath);
-        boolean rmdir(const String& filepath) {
-            return rmdir(filepath.c_str());
-        }
+        boolean remove(const TCHAR* filepath);
+        boolean rmdir(const TCHAR* filepath);
     };
 };
 using namespace fs;

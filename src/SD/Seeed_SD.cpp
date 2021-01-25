@@ -60,7 +60,7 @@ namespace fs {
     uint64_t SDFS::totalBytes() {
         FATFS* fsinfo;
         DWORD fre_clust;
-        if (f_getfree("0:", &fre_clust, &fsinfo) != 0) {
+        if (f_getfree(_T("0:"), &fre_clust, &fsinfo) != 0) {
             return 0;
         }
         uint64_t size = ((uint64_t)(fsinfo->csize)) * (fsinfo->n_fatent - 2)
@@ -75,7 +75,7 @@ namespace fs {
     uint64_t SDFS::usedBytes() {
         FATFS* fsinfo;
         DWORD fre_clust;
-        if (f_getfree("0:", &fre_clust, &fsinfo) != 0) {
+        if (f_getfree(_T("0:"), &fre_clust, &fsinfo) != 0) {
             return 0;
         }
         uint64_t size = ((uint64_t)(fsinfo->csize)) * ((fsinfo->n_fatent - 2) - (fsinfo->free_clst))
